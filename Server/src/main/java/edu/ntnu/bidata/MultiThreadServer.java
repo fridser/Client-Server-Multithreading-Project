@@ -21,6 +21,7 @@ public class MultiThreadServer {
         Thread thread = new Thread(new ClientHandler(client));
         thread.start();
       } catch (IOException e) {
+        running = false;
         throw new RuntimeException("Not implemented yet");
       }
     }
