@@ -23,6 +23,7 @@ public class ClientHandler implements Runnable {
         String output = String.valueOf(this.logic.handleCommand(message));
         OutputStream out = client.getOutputStream();
         out.write(output.getBytes());
+        System.out.println("Calculated: " + output + "From: " + message);
       }
     } catch (IOException e) {
       throw new RuntimeException("Not Implemented");
