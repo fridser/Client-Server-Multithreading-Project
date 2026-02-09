@@ -1,4 +1,4 @@
-package edu.ntnu.bidata.javafx;
+package edu.ntnu.bidata;
 
 public class Main {
   public static void main(String[] args) {
