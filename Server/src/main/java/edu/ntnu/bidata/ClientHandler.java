@@ -2,6 +2,7 @@ package edu.ntnu.bidata;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
@@ -19,7 +20,7 @@ public class ClientHandler implements Runnable {
       byte[] input = client.getInputStream().readAllBytes();
       String message = new String(input);
       String output = String.valueOf(this.logic.handleCommand(message));
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      OutputStream out = client.getOutputStream();
       out.write(output.getBytes());
       client.close();
     } catch (IOException e) {
