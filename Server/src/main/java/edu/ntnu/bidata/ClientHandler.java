@@ -17,14 +17,21 @@ public class ClientHandler implements Runnable {
   @Override
   public void run() {
     try {
-      byte[] input = client.getInputStream().readAllBytes();
-      String message = new String(input);
-      String output = String.valueOf(this.logic.handleCommand(message));
-      OutputStream out = client.getOutputStream();
-      out.write(output.getBytes());
-      client.close();
+      while (client.isConnected()) {
+        byte[] input = client.getInputStream().readAllBytes();
+        String message = new String(input);
+        String output = String.valueOf(this.logic.handleCommand(message));
+        OutputStream out = client.getOutputStream();
+        out.write(output.getBytes());
+      }
     } catch (IOException e) {
       throw new RuntimeException("Not Implemented");
+    } finally {
+      try {
+        client.close();
+      } catch (IOException e) {
+        throw new RuntimeException("Not implemented yet");
+      }
     }
   }
 }
