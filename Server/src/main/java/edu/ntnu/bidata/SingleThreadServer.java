@@ -1,6 +1,6 @@
 package edu.ntnu.bidata;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -18,6 +18,7 @@ public class SingleThreadServer {
     this.calculator = new CalculatorLogic();
   }
 
+  //TODO: Remove sout statements when no longer necessary for debugging.
   public void run() {
     if (!isOn) {
       isOn = true;
@@ -31,6 +32,7 @@ public class SingleThreadServer {
         System.out.println("Server is listening on port " + port);
         Socket clientSocket = ss.accept();
         System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
+        handleClient(clientSocket);
       }
     } catch (
         IOException e) {
@@ -40,6 +42,40 @@ public class SingleThreadServer {
     } finally {
       // try-with-resources already closed the socket; clear the field reference for clarity
       serverSocket = null;
+    }
+  }
+
+  //TODO: Remove sout statements when no longer necessary for debugging.
+  private void handleClient(Socket clientSocket) {
+    try (clientSocket; BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
+
+      writer.write("Welcome to the Calculator! \n" +
+          "Write your operation in the format: var1 operation var2 \n" +
+          "Operations available: \n" +
+          "Addition: + \n" +
+          "Subtraction: - \n" +
+          "Multiplication: * \n" +
+          "Division: /\n" +
+          ">");
+      writer.newLine();
+
+
+      while (isOn && !clientSocket.isClosed()) {
+        String message = reader.readLine(); // message is null if client abruptly disconnects
+        System.out.println(message);
+        int result = calculator.handleCommand(message);
+        System.out.println("Calculated: " + result);
+
+        if (message == null || message.equalsIgnoreCase("exit")) {
+          isOn = false;
+        }
+        writer.write("Result: " + result);
+        writer.newLine();
+      }
+    } catch (IOException e) {
+      // Client disconnected abruptly (e.g., connection reset)
+      System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
     }
   }
 
