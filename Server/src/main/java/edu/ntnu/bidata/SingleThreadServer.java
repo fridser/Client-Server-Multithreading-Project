@@ -64,12 +64,12 @@ public class SingleThreadServer {
       while (isOn && !clientSocket.isClosed()) {
         String message = reader.readLine(); // message is null if client abruptly disconnects
         System.out.println(message);
+        if (message == null || message.equalsIgnoreCase("exit")) {
+          break;
+        }
         int result = calculator.handleCommand(message);
         System.out.println("Calculated: " + result);
 
-        if (message == null || message.equalsIgnoreCase("exit")) {
-          isOn = false;
-        }
         writer.write("Result: " + result);
         writer.newLine();
       }
