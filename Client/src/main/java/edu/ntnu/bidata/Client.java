@@ -72,9 +72,8 @@ public class Client {
           // Use persistent connection for all commands
           try {
             List<String> results = client.sendCommands(commands);
-            for (int j = 0; j < commands.size(); j++) {
-              System.out.println("Client #" + clientId + ": " + commands.get(j) + " = " + results.get(j));
-            }
+            // Only print summary to reduce contention
+            System.out.println("Client #" + clientId + " completed " + results.size() + " commands");
           } catch (IOException e) {
             System.err.println("Client #" + clientId + " error: " + e.getMessage());
           }
