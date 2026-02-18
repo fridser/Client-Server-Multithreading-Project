@@ -1,7 +1,6 @@
 package edu.ntnu.bidata;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -9,8 +8,8 @@ public class MultiThreadServer {
     private final ServerSocket serverSocket;
     private volatile boolean running = false;
 
-    public MultiThreadServer(int port,InetAddress address) throws IOException {
-        serverSocket = new ServerSocket(port, 50, address);
+    public MultiThreadServer(int port) throws IOException {
+        serverSocket = new ServerSocket(port);
     }
 
     public void start() {

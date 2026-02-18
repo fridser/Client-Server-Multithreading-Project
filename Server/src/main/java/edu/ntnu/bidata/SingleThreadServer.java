@@ -52,16 +52,20 @@ public class SingleThreadServer {
 
     //TODO: Remove sout statements when no longer necessary for debugging.
     private void handleClient(Socket clientSocket) {
-        try (clientSocket; BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        try (clientSocket;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
-            String message = reader.readLine(); // message is null if client abruptly disconnects
-            System.out.println(message);
 
-            String result = calculator.handleCommand(message);
-            System.out.println("Calculated: " + result);
-
-            writer.write(result);
-            writer.newLine();
+            String message;
+            int commandCount = 0;
+            while ((message = reader.readLine()) != null) {
+                String result = calculator.handleCommand(message);
+                writer.write(result);
+                writer.newLine();
+                writer.flush();
+                commandCount++;
+            }
+            System.out.println("Client " + clientSocket.getInetAddress().getHostAddress() + " processed " + commandCount + " commands");
 
         } catch (IOException e) {
             // Client disconnected abruptly (e.g., connection reset)
