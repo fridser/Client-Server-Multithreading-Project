@@ -8,7 +8,7 @@ public class Main {
       int port = 1238;
       InetAddress address = InetAddress.getByName("127.0.0.1");
       MultiThreadServer server = new MultiThreadServer(port, address);
-      //SingleThreadServer server = new SingleThreadServer(port);
+//      SingleThreadServer server = new SingleThreadServer(port);
       server.start();
     } catch (Exception e) {
       e.printStackTrace();

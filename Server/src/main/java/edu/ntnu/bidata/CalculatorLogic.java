@@ -1,85 +1,64 @@
 package edu.ntnu.bidata;
 
 /**
- * Represents a calculator that can add, subtract, multiply and divide.
- * Can take an operation as a String with the format "var1 operation var2" and
- * perform the operation.
+ * Calculator logic for performing arithmetic operations.
+ * Supports addition, subtraction, multiplication, and division.
  */
 public class CalculatorLogic {
 
-  /**
-   * Creates an instance of the calculator logic.
-   */
-  public CalculatorLogic() {
-
-  }
-
-  /**
-   * Parses the given command, executes it and gives an integer result.
-   *
-   * @param command The command to be executed. Format: "var1 operation var2".
-   * @return The result of the given operation.
-   */
-  public int handleCommand(String command) {
-    String[] components = command.split(" ");
-    if (components[1].equals("+")) {
-      return add(Integer.getInteger(components[0]), Integer.getInteger(components[2]));
+    public CalculatorLogic() {
     }
-    if (components[1].equals("-")) {
-      return subtract(Integer.getInteger(components[0]), Integer.getInteger(components[2]));
-    }
-    if (components[1].equals("*")) {
-      return multiply(Integer.getInteger(components[0]), Integer.getInteger(components[2]));
-    }
-    if (components[1].equals("/")) {
-      return divide(Integer.getInteger(components[0]), Integer.getInteger(components[2]));
-    }
-    else {
-      return 0;
-    }
-  }
 
-  /**
-   * Adds the given variables together.
-   *
-   * @param var1 One of the numbers to be added.
-   * @param var2 One of the numbers to be added.
-   * @return The sum of the given variables.
-   */
-  public int add(int var1, int var2) {
-    return var1 + var2;
-  }
+    /**
+     * Handles a command in format: "number operator number"
+     * @param command The command string (e.g., "10 + 5")
+     * @return Result as string or error message
+     */
+    public String handleCommand(String command) {
+        String[] components = command.trim().split("\\s+");
 
-  /**
-   * Subtracts one number from the other.
-   *
-   * @param var1 The variable to be subtracted from.
-   * @param var2 The number that is being subtracted from var1.
-   * @return The result of var1 - var2.
-   */
-  public int subtract(int var1, int var2) {
-    return var1 - var2;
-  }
+        if (components.length != 3) {
+            return "ERROR: Invalid command format. Expected: <number> <operator> <number>";
+        }
 
-  /**
-   * Multiplies the given variables.
-   *
-   * @param var1 One of the variables to be multiplied.
-   * @param var2 One of the variables to be multiplied.
-   * @return The product of var1*var2.
-   */
-  public int multiply(int var1, int var2) {
-    return var1 * var2;
-  }
+        try {
+            int num1 = Integer.parseInt(components[0]);
+            int num2 = Integer.parseInt(components[2]);
+            String operator = components[1];
 
-  /**
-   * Divides the first given variable by the second given variable.
-   *
-   * @param var1 The variable to be divided.
-   * @param var2 The variable var1 is being divided by.
-   * @return The result of var1/var2.
-   */
-  public int divide(int var1, int var2) {
-    return var1 / var2;
-  }
+            switch (operator) {
+                case "+":
+                    return String.valueOf(add(num1, num2));
+                case "-":
+                    return String.valueOf(subtract(num1, num2));
+                case "*":
+                    return String.valueOf(multiply(num1, num2));
+                case "/":
+                    if (num2 == 0) {
+                        return "ERROR: Division by zero";
+                    }
+                    return String.valueOf(divide(num1, num2));
+                default:
+                    return "ERROR: Unknown operator. Use +, -, *, /";
+            }
+        } catch (NumberFormatException e) {
+            return "ERROR: Invalid number format";
+        }
+    }
+
+    public int add(int var1, int var2) {
+        return var1 + var2;
+    }
+
+    public int subtract(int var1, int var2) {
+        return var1 - var2;
+    }
+
+    public int multiply(int var1, int var2) {
+        return var1 * var2;
+    }
+
+    public int divide(int var1, int var2) {
+        return var1 / var2;
+    }
 }

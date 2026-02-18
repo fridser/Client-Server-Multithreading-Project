@@ -6,24 +6,25 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class MultiThreadServer {
-  private final ServerSocket serverSocket;
-  private volatile boolean running = false;
+    private final ServerSocket serverSocket;
+    private volatile boolean running = false;
 
-  public MultiThreadServer(int port,InetAddress address) throws IOException {
-    serverSocket = new ServerSocket(port, 50, address);
-  }
-
-  public void start() {
-    running = true;
-    while (running) {
-      try {
-        Socket client = serverSocket.accept();
-        Thread thread = new Thread(new ClientHandler(client));
-        thread.start();
-      } catch (IOException e) {
-        running = false;
-        throw new RuntimeException("Not implemented yet");
-      }
+    public MultiThreadServer(int port,InetAddress address) throws IOException {
+        serverSocket = new ServerSocket(port, 50, address);
     }
-  }
+
+    public void start() {
+        running = true;
+        while (running) {
+            try {
+                Socket client = serverSocket.accept();
+                System.out.println("New client connected: " + client.getInetAddress().getHostAddress());
+                Thread thread = new Thread(new ClientHandler(client));
+                thread.start();
+            } catch (IOException e) {
+                running = false;
+                throw new RuntimeException("Not implemented yet");
+            }
+        }
+    }
 }
