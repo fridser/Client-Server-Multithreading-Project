@@ -1,37 +1,41 @@
 package edu.ntnu.bidata;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
   private final Socket client;
-  private final CalculatorLogic logic;
+  private final CalculatorLogic calculator;
 
   public ClientHandler(Socket client) {
     this.client = client;
-    this.logic = new CalculatorLogic();
+    this.calculator = new CalculatorLogic();
   }
 
   @Override
   public void run() {
-    try {
-      while (client.isConnected()) {
-        byte[] input = client.getInputStream().readAllBytes();
-        String message = new String(input);
-        String output = String.valueOf(this.logic.handleCommand(message));
-        OutputStream out = client.getOutputStream();
-        out.write(output.getBytes());
-        System.out.println("Calculated: " + output + "From: " + message);
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()))) {
+
+      String message;
+      while ((message = reader.readLine()) != null) {
+        System.out.println("Received: " + message);
+
+        String result = calculator.handleCommand(message);
+
+        writer.write(result);
+        writer.newLine();
+        writer.flush();
+
+        System.out.println("Sent result: " + result);
       }
     } catch (IOException e) {
-      throw new RuntimeException("Not Implemented");
+      System.out.println("Client disconnected: " + client.getInetAddress().getHostAddress());
     } finally {
       try {
         client.close();
       } catch (IOException e) {
-        throw new RuntimeException("Not implemented yet");
+        e.printStackTrace();
       }
     }
   }
