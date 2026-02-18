@@ -1,8 +1,6 @@
 package edu.ntnu.bidata;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
@@ -16,23 +14,36 @@ public class ClientHandler implements Runnable {
 
   @Override
   public void run() {
+    BufferedReader in = null;
+    BufferedWriter out = null;
     try {
-      while (client.isConnected()) {
-        byte[] input = client.getInputStream().readAllBytes();
-        String message = new String(input);
+      in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+      out = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+
+      String message;
+      // Read until the client closes the connection (readLine returns null)
+      while ((message = in.readLine()) != null) {
         String output = String.valueOf(this.logic.handleCommand(message));
-        OutputStream out = client.getOutputStream();
-        out.write(output.getBytes());
-        System.out.println("Calculated: " + output + "From: " + message);
+        out.write(output);
+        out.newLine();
+        out.flush();
+        System.out.println("Calculated: " + output + " From: " + message);
       }
+
+      System.out.println("Client closed: " + client.getInetAddress().getHostAddress());
     } catch (IOException e) {
-      throw new RuntimeException("Not Implemented");
+      System.err.println("I/O error with client " + client.getInetAddress().getHostAddress() + ": " + e.getMessage());
     } finally {
+      // Clean up resources
       try {
-        client.close();
-      } catch (IOException e) {
-        throw new RuntimeException("Not implemented yet");
-      }
+        if (in != null) in.close();
+      } catch (IOException ignored) {}
+      try {
+        if (out != null) out.close();
+      } catch (IOException ignored) {}
+      try {
+        if (!client.isClosed()) client.close();
+      } catch (IOException ignored) {}
     }
   }
 }

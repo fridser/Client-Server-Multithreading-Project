@@ -23,7 +23,7 @@ public class SingleThreadServer {
     }
 
     //TODO: Remove sout statements when no longer necessary for debugging.
-    public void run() {
+    public void start() {
         if (!isOn) {
             isOn = true;
         }

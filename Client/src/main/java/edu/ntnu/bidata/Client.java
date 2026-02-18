@@ -1,6 +1,8 @@
 package edu.ntnu.bidata;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,25 +16,35 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Client {
     private final String host;
     private final int port;
+    private final Socket socket;
+    private final BufferedReader in;
+    private final PrintWriter out;
 
-    public Client(String host, int port) {
+    public Client(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
+        this.socket = new  Socket();
+        socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
     }
 
     /**
      * Send a single command to the server and return the result.
      */
     public String sendCommand(String command) throws IOException {
-        try (
-                Socket socket = new Socket(host, port);
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(socket.getInputStream()))
-        ) {
-            out.println(command);
-            return in.readLine();
+        try {
+          System.out.println(command);
+          out.println(command);
+          String result = in.readLine();
+          while (result == null) {
+            result = in.readLine();
+          }
+          return result;
+        } catch (IOException e) {
+          e.printStackTrace();
         }
+        return null;
     }
 
     /**
@@ -62,26 +74,28 @@ public class Client {
         for (int i = 0; i < numClients; i++) {
             final int clientId = i + 1;
             Thread thread = new Thread(() -> {
-                try {
-                    // Wait for start signal
-                    startLatch.await();
+              try {
+                // Wait for start signal
+                startLatch.await();
 
-                    Client client = new Client(host, port);
-                    long clientStartTime = System.currentTimeMillis();
+                Client client = new Client(host, port);
+                long clientStartTime = System.currentTimeMillis();
 
-                    for (String command : commands) {
-                        try {
-                            String result = client.sendCommand(command);
-                            System.out.println("Client #" + clientId + ": " + command + " = " + result);
-                        } catch (IOException e) {
-                            System.err.println("Client #" + clientId + " error: " + e.getMessage());
-                        }
-                    }
+                for (String command : commands) {
+                  try {
+                    String result = client.sendCommand(command);
+                    System.out.println("Client #" + clientId + ": " + command + " = " + result);
+                  } catch (IOException e) {
+                    System.err.println("Client #" + clientId + " error: " + e.getMessage());
+                  }
+                }
 
-                    long clientEndTime = System.currentTimeMillis();
-                    totalResponseTime.addAndGet(clientEndTime - clientStartTime);
+                long clientEndTime = System.currentTimeMillis();
+                totalResponseTime.addAndGet(clientEndTime - clientStartTime);
 
-                } catch (InterruptedException e) {
+              } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } finally {
                     doneLatch.countDown();
