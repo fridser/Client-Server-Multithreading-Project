@@ -18,17 +18,15 @@ public class ClientHandler implements Runnable {
          BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()))) {
 
       String message;
+      int commandCount = 0;
       while ((message = reader.readLine()) != null) {
-        System.out.println("Received: " + message);
-
         String result = calculator.handleCommand(message);
-
         writer.write(result);
         writer.newLine();
         writer.flush();
-
-        System.out.println("Sent result: " + result);
+        commandCount++;
       }
+      System.out.println("Client " + client.getInetAddress().getHostAddress() + " processed " + commandCount + " commands");
     } catch (IOException e) {
       System.out.println("Client disconnected: " + client.getInetAddress().getHostAddress());
     } finally {
