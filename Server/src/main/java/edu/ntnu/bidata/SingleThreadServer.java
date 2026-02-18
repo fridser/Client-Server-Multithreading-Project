@@ -57,16 +57,15 @@ public class SingleThreadServer {
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
 
             String message;
+            int commandCount = 0;
             while ((message = reader.readLine()) != null) {
-                System.out.println("Received: " + message);
-
                 String result = calculator.handleCommand(message);
-                System.out.println("Calculated: " + result);
-
                 writer.write(result);
                 writer.newLine();
                 writer.flush();
+                commandCount++;
             }
+            System.out.println("Client " + clientSocket.getInetAddress().getHostAddress() + " processed " + commandCount + " commands");
 
         } catch (IOException e) {
             // Client disconnected abruptly (e.g., connection reset)
