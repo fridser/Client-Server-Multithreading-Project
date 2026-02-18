@@ -1,72 +1,41 @@
 package edu.ntnu.bidata;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 public class SingleThreadServer {
-    private final int port;
-    private ServerSocket serverSocket;
-    private CalculatorLogic calculator;
-    private boolean isOn = false;
+        public static void main(String[] args) throws IOException {
+            int port = 5000;
+            ServerSocket serverSocket = new ServerSocket(port);
+            System.out.println("Single-threaded Server is running on port " + port);
 
-    public SingleThreadServer(int port) throws IllegalArgumentException {
-        if (port < 0 || port > 65535) {
-            throw new IllegalArgumentException("Port number must be between 0 and 65535.");
-        }
-        this.port = port;
-        this.calculator = new CalculatorLogic();
-    }
+            while (true) {
+                // BLOCKING POINT 1: accept() - The thread waits (WAITING state) for a connection.
+                try (Socket clientSocket = serverSocket.accept();
+                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
-    //TODO: Remove sout statements when no longer necessary for debugging.
-    public void run() {
-        if (!isOn) {
-            isOn = true;
-        }
+                    System.out.println("Client connected.");
 
-        try (ServerSocket ss = new ServerSocket(port)) {
-            this.serverSocket = ss;
+                    // BLOCKING POINT 2: readLine() - The thread waits for data from the network.
+                    String request = in.readLine();
 
+                    // Uncomment the line below to simulate a 2-second processing time
+//                     Thread.sleep(2000);
 
-            while (isOn) {
-                System.out.println("Server is listening on port " + port);
-                Socket clientSocket = ss.accept();
-                System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
-                handleClient(clientSocket);
-                clientSocket.close();
+                    String result = CalculatorLogic.processRequest(request);
+                    out.println(result);
+
+                    System.out.println("Request processed: " + request + " -> " + result);
+                    // The connection is closed, and only NOW the server can call accept() again.
+                } catch (Exception e) {
+                    System.err.println("Server error: " + e.getMessage());
+                }
             }
-        } catch (
-                IOException e) {
-            if (isOn) {
-                e.printStackTrace();
-            }
-        } finally {
-            // try-with-resources already closed the socket; clear the field reference for clarity
-            serverSocket = null;
         }
     }
-
-    //TODO: Remove sout statements when no longer necessary for debugging.
-    private void handleClient(Socket clientSocket) {
-        try (clientSocket; BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
-            String message = reader.readLine(); // message is null if client abruptly disconnects
-            System.out.println(message);
-
-            String result = calculator.handleCommand(message);
-            System.out.println("Calculated: " + result);
-
-            writer.write(result);
-            writer.newLine();
-
-        } catch (IOException e) {
-            // Client disconnected abruptly (e.g., connection reset)
-            System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
-        }
-    }
-
-}
