@@ -23,7 +23,7 @@ public class SingleThreadServer {
     }
 
     //TODO: Remove sout statements when no longer necessary for debugging.
-    public void run() {
+    public void start() {
         if (!isOn) {
             isOn = true;
         }
@@ -52,16 +52,21 @@ public class SingleThreadServer {
 
     //TODO: Remove sout statements when no longer necessary for debugging.
     private void handleClient(Socket clientSocket) {
-        try (clientSocket; BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        try (clientSocket;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
-            String message = reader.readLine(); // message is null if client abruptly disconnects
-            System.out.println(message);
 
-            String result = calculator.handleCommand(message);
-            System.out.println("Calculated: " + result);
+            String message;
+            while ((message = reader.readLine()) != null) {
+                System.out.println("Received: " + message);
 
-            writer.write(result);
-            writer.newLine();
+                String result = calculator.handleCommand(message);
+                System.out.println("Calculated: " + result);
+
+                writer.write(result);
+                writer.newLine();
+                writer.flush();
+            }
 
         } catch (IOException e) {
             // Client disconnected abruptly (e.g., connection reset)
