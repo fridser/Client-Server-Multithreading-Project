@@ -161,6 +161,7 @@ public class Client {
 
       for (String command : commands) {
         out.println(command);
+        System.out.println("Sent command: " + command);
         results.add(in.readLine());
       }
     }

@@ -1,16 +1,19 @@
 package edu.ntnu.bidata;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Set;
 
 public class SingleThreadServer {
     private final int port;
-    private ServerSocket serverSocket;
+    private ServerSocketChannel serverSocket;
     private CalculatorLogic calculator;
     private boolean isOn = false;
 
@@ -28,16 +31,29 @@ public class SingleThreadServer {
             isOn = true;
         }
 
-        try (ServerSocket ss = new ServerSocket(port)) {
+        try (ServerSocketChannel ss = ServerSocketChannel.open()
+        .bind(new java.net.InetSocketAddress(port));
+             final Selector selector = Selector.open()) {
             this.serverSocket = ss;
-
+            ss.configureBlocking(false);
+            ss.register(selector, SelectionKey.OP_ACCEPT);
 
             while (isOn) {
-                System.out.println("Server is listening on port " + port);
-                Socket clientSocket = ss.accept();
-                System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
-                handleClient(clientSocket);
-                clientSocket.close();
+                selector.select();
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> iterator = selectedKeys.iterator();
+                while (iterator.hasNext()) {
+                    SelectionKey key = iterator.next();
+                    iterator.remove();
+                    if (key.isAcceptable()) {
+                        SocketChannel clientSocket = ss.accept();
+                        clientSocket.configureBlocking(false);
+                        clientSocket.register(selector, SelectionKey.OP_READ);
+                    } else if (key.isReadable()) {
+                        SocketChannel client = (SocketChannel) key.channel();
+                        handleClient(client);
+                    }
+                }
             }
         } catch (
                 IOException e) {
@@ -51,25 +67,21 @@ public class SingleThreadServer {
     }
 
     //TODO: Remove sout statements when no longer necessary for debugging.
-    private void handleClient(Socket clientSocket) {
-        try (clientSocket;
-             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
+    private void handleClient(SocketChannel channel) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-            String message;
-            int commandCount = 0;
-            while ((message = reader.readLine()) != null) {
-                String result = calculator.handleCommand(message);
-                writer.write(result);
-                writer.newLine();
-                writer.flush();
-                commandCount++;
-            }
-            System.out.println("Client " + clientSocket.getInetAddress().getHostAddress() + " processed " + commandCount + " commands");
+        channel.read(buffer);
 
-        } catch (IOException e) {
-            // Client disconnected abruptly (e.g., connection reset)
-            System.out.println("Client disconnected: " + clientSocket.getInetAddress().getHostAddress());
+        String data = new String(buffer.array()).trim();
+
+        if (data.length() > 0) {
+            System.out.println("Received command: " + data);
+            String result = calculator.handleCommand(data);
+            System.out.println("Sending result: " + result);
+            result = result + "\n";
+            ByteBuffer responseBuffer = ByteBuffer.wrap(result.getBytes());
+            channel.write(responseBuffer);
+
         }
     }
 
