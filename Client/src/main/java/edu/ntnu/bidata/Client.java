@@ -20,20 +20,6 @@ public class Client {
     this.port = port;
   }
 
-  /**
-   * Send a single command to the server and return the result.
-   */
-  public String sendCommand(String command) throws IOException {
-    try (
-            Socket socket = new Socket(host, port);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream()))
-    ) {
-      out.println(command);
-      return in.readLine();
-    }
-  }
 
   /**
    * Run multiple simultaneous clients for performance testing.
