@@ -1,6 +1,9 @@
 package edu.ntnu.bidata;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +18,12 @@ public class Client {
   private final String host;
   private final int port;
 
+  /**
+   * Create a client that connects to the specified host and port.
+   *
+   * @param host Server hostname or IP address
+   * @param port Server port number
+   */
   public Client(String host, int port) {
     this.host = host;
     this.port = port;
@@ -73,7 +82,11 @@ public class Client {
           try {
             List<String> results = client.sendCommands(commands);
             // Only print summary to reduce contention
-            System.out.println("Client #" + clientId + " completed " + results.size() + " commands");
+            System.out.println("Client #"
+                    + clientId
+                    + " completed "
+                    + results.size()
+                    + " commands");
           } catch (IOException e) {
             System.err.println("Client #" + clientId + " error: " + e.getMessage());
           }
@@ -107,14 +120,19 @@ public class Client {
 
     System.out.println("\n=== Results ===");
     System.out.println("Total execution time: " + totalTime + " ms");
-    System.out.println("Average response time per client: " +
-            (totalResponseTime.get() / numClients) + " ms");
-    System.out.println("Throughput: " +
-            ((numClients * commands.size() * 1000.0) / totalTime) + " requests/sec");
+    System.out.println("Average response time per client: "
+            + (totalResponseTime.get() / numClients) + " ms");
+    System.out.println("Throughput: "
+            + ((numClients * commands.size() * 1000.0) / totalTime) + " requests/sec");
 
     return totalTime;
   }
 
+  /**
+   * Main method to run the client performance test.
+   *
+   * @param args Command line arguments
+   */
   public static void main(String[] args) {
     // Parse arguments
     String host = "127.0.0.1";
