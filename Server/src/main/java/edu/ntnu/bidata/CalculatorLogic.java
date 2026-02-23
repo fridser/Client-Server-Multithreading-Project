@@ -23,7 +23,7 @@ public class CalculatorLogic {
 
         try {
             // Simulate extra computation time to create significant performance differences between single-threaded and multi-threaded servers
-            Thread.sleep(100); // 100ms delay per operation
+            Thread.sleep(2000); // 100ms delay per operation
 
             int num1 = Integer.parseInt(components[0]);
             int num2 = Integer.parseInt(components[2]);
@@ -46,7 +46,7 @@ public class CalculatorLogic {
             }
         } catch (NumberFormatException e) {
             return "ERROR: Invalid number format";
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             Thread.currentThread().interrupt();
             return "ERROR: Operation interrupted";
         }
